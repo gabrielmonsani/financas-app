@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import {Platform} from 'react-native';
 
 import {
@@ -9,8 +9,16 @@ import {
   SubmitButton,
   SubmitText,
 } from '../SignIn/styles';
+import {AuthContext} from "../../contexts/auth";
 
 export default function SignUp() {
+
+  const {user} = useContext(AuthContext)
+
+  function handleSignUp() {
+    console.log(user)
+  }
+
   return (
     <Background>
       <Container
@@ -36,7 +44,7 @@ export default function SignUp() {
         />
         </AreaInput>
 
-        <SubmitButton>
+        <SubmitButton onPress={handleSignUp}>
           <SubmitText>Cadastrar</SubmitText>
         </SubmitButton>
 
