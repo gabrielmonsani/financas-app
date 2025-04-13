@@ -1,60 +1,72 @@
-import React, { useContext, useEffect, useState } from 'react';
-import {View, Text, Button} from 'react-native';
+import React, {useContext, useEffect, useState} from 'react';
+import {View, Text, Button, TouchableOpacity} from 'react-native';
 
-import { AuthContext } from '../../contexts/auth'
+import {AuthContext} from '../../contexts/auth';
 
 import Header from '../../components/Header';
-import { Background, ListBalance } from './styles';
+import {Background, ListBalance, Area, Title, List} from './styles';
 
-import api from '../../services/api'
-import { format } from 'date-fns'
+import api from '../../services/api';
+import {format} from 'date-fns';
 
-import { useIsFocused } from '@react-navigation/native';
-import BalanceItem from "../../components/Balance";
+import {useIsFocused} from '@react-navigation/native';
+import BalanceItem from '../../components/Balance';
+import Icon from 'react-native-vector-icons/MaterialIcons';
+import HistoricoList from '../../components/HistoricoList';
 
+export default function Home() {
+  const isFocused = useIsFocused();
+  const [listBalance, setListBalance] = useState([]);
 
-export default function Home(){
-    const isFocused = useIsFocused();
-    const [listBalance, setListBalance] = useState([]);
+  const [dateMovements, setDateMovements] = useState(new Date());
 
-    const [dateMovements, setDateMovements] = useState(new Date())
+  useEffect(() => {
+    let isActive = true;
 
+    async function getMovements() {
+      let dateFormated = format(dateMovements, 'dd/MM/yyyy');
 
-    useEffect(()=>{
-        let isActive = true;
+      const balance = await api.get('/balance', {
+        params: {
+          date: dateFormated,
+        },
+      });
 
-        async function getMovements(){
-            let dateFormated = format(dateMovements, 'dd/MM/yyyy');
+      if (isActive) {
+        setListBalance(balance.data);
+      }
+    }
 
-            const balance = await api.get('/balance', {
-                params:{
-                    date: dateFormated
-                }
-            })
+    getMovements();
 
-            if(isActive){
-                setListBalance(balance.data);
-            }
-        }
+    return () => (isActive = false);
+  }, [isFocused]);
 
-        getMovements();
+  return (
+    <Background>
+      <Header title="Minhas movimentações" />
 
-        return () => isActive = false;
+      <ListBalance
+        data={listBalance}
+        horizontal={true}
+        showsHorizontalScrollIndicator={false}
+        keyExtractor={item => item.tag}
+        renderItem={({item}) => <BalanceItem data={item} />}
+      />
 
-    }, [isFocused])
+      <Area>
+        <TouchableOpacity>
+          <Icon name="event" color="#121212" size={30} />
+        </TouchableOpacity>
+        <Title>Ultimas movimentações</Title>
+      </Area>
 
-    return(
-        <Background>
-            <Header title="Minhas movimentações" />
-
-            <ListBalance
-                data={listBalance}
-                horizontal={true}
-                showsHorizontalScrollIndicator={false}
-                keyExtractor= {item => item.tag}
-                renderItem={ ({item}) => ( <BalanceItem data={item} />) }
-            />
-
-        </Background>
-    )
+      <List
+        data={[]}
+        keyExtractor={item => item.id}
+        renderItem={({item}) => <HistoricoList />}
+        showsVerticalScrollIndicator={false}
+      />
+    </Background>
+  );
 }
